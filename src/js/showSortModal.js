@@ -1,14 +1,30 @@
-var picoModal = require('picomodal');
-var translate = require('./i18n').translate;
+import picoModal from 'picomodal'
+import { translate } from './i18n'
+import { contains, getChildPaths } from './util'
 
 /**
  * Show advanced sorting modal
- * @param {Node} node the node to be sorted
  * @param {HTMLElement} container   The container where to center
  *                                  the modal and create an overlay
+ * @param {JSON} json               The JSON data to be sorted.
+ * @param {function} onSort         Callback function, invoked with
+ *                                  an object containing the selected
+ *                                  path and direction
+ * @param {Object} options
+ *            Available options:
+ *                - {string} path              The selected path
+ *                - {'asc' | 'desc'} direction The selected direction
  */
-function showSortModal (node, container) {
-  var content = '<div class="pico-modal-contents">' +
+export function showSortModal (container, json, onSort, options) {
+  const paths = Array.isArray(json)
+    ? getChildPaths(json)
+    : ['']
+  const selectedPath = options && options.path && contains(paths, options.path)
+    ? options.path
+    : paths[0]
+  const selectedDirection = (options && options.direction) || 'asc'
+
+  const content = '<div class="pico-modal-contents">' +
       '<div class="pico-modal-header">' + translate('sort') + '</div>' +
       '<form>' +
       '<table>' +
@@ -28,7 +44,7 @@ function showSortModal (node, container) {
       '  <div id="direction" class="jsoneditor-button-group">' +
       '<input type="button" ' +
       'value="' + translate('sortAscending') + '" ' +
-      'title="'  + translate('sortAscendingTitle') + '" ' +
+      'title="' + translate('sortAscendingTitle') + '" ' +
       'data-value="asc" ' +
       'class="jsoneditor-button-first jsoneditor-button-asc"/>' +
       '<input type="button" ' +
@@ -47,68 +63,69 @@ function showSortModal (node, container) {
       '</tbody>' +
       '</table>' +
       '</form>' +
-      '</div>';
+      '</div>'
 
   picoModal({
     parent: container,
     content: content,
     overlayClass: 'jsoneditor-modal-overlay',
+    overlayStyles: {
+      backgroundColor: 'rgb(1,1,1)',
+      opacity: 0.3
+    },
     modalClass: 'jsoneditor-modal jsoneditor-modal-sort'
   })
-      .afterCreate(function (modal) {
-        var form = modal.modalElem().querySelector('form');
-        var ok = modal.modalElem().querySelector('#ok');
-        var field = modal.modalElem().querySelector('#field');
-        var direction = modal.modalElem().querySelector('#direction');
+    .afterCreate(modal => {
+      const form = modal.modalElem().querySelector('form')
+      const ok = modal.modalElem().querySelector('#ok')
+      const field = modal.modalElem().querySelector('#field')
+      const direction = modal.modalElem().querySelector('#direction')
 
-        var paths = node.type === 'array'
-            ? node.getChildPaths()
-            : ['.'];
+      function preprocessPath (path) {
+        return (path === '')
+          ? '@'
+          : (path[0] === '.')
+            ? path.slice(1)
+            : path
+      }
 
-        paths.forEach(function (path) {
-          var option = document.createElement('option');
-          option.text = path;
-          option.value = path;
-          field.appendChild(option);
-        });
-
-        function setDirection(value) {
-          direction.value = value;
-          direction.className = 'jsoneditor-button-group jsoneditor-button-group-value-' + direction.value;
-        }
-
-        field.value = node.sortedBy ? node.sortedBy.path : paths[0];
-        setDirection(node.sortedBy ? node.sortedBy.direction : 'asc');
-
-        direction.onclick = function (event) {
-          setDirection(event.target.getAttribute('data-value'));
-        };
-
-        ok.onclick = function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          modal.close();
-
-          var path = field.value;
-          var pathArray = (path === '.') ? [] : path.split('.').slice(1);
-
-          node.sortedBy = {
-            path: path,
-            direction: direction.value
-          };
-
-          node.sort(pathArray, direction.value)
-        };
-
-        if (form) { // form is not available when JSONEditor is created inside a form
-          form.onsubmit = ok.onclick;
-        }
+      paths.forEach(path => {
+        const option = document.createElement('option')
+        option.text = preprocessPath(path)
+        option.value = path
+        field.appendChild(option)
       })
-      .afterClose(function (modal) {
-        modal.destroy();
-      })
-      .show();
+
+      function setDirection (value) {
+        direction.value = value
+        direction.className = 'jsoneditor-button-group jsoneditor-button-group-value-' + direction.value
+      }
+
+      field.value = selectedPath || paths[0]
+      setDirection(selectedDirection || 'asc')
+
+      direction.onclick = event => {
+        setDirection(event.target.getAttribute('data-value'))
+      }
+
+      ok.onclick = event => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        modal.close()
+
+        onSort({
+          path: field.value,
+          direction: direction.value
+        })
+      }
+
+      if (form) { // form is not available when JSONEditor is created inside a form
+        form.onsubmit = ok.onclick
+      }
+    })
+    .afterClose(modal => {
+      modal.destroy()
+    })
+    .show()
 }
-
-module.exports = showSortModal;

@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/npm/v/jsoneditor.svg)](https://www.npmjs.com/package/jsoneditor)
 [![Downloads](https://img.shields.io/npm/dm/jsoneditor.svg)](https://www.npmjs.com/package/jsoneditor)
-![Maintenance](https://img.shields.io/maintenance/yes/2019.svg)
+![Maintenance](https://img.shields.io/maintenance/yes/2020.svg)
 [![License](https://img.shields.io/github/license/josdejong/jsoneditor.svg)](https://github.com/josdejong/jsoneditor/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjosdejong%2Fjsoneditor.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjosdejong%2Fjsoneditor?ref=badge_shield)
 
@@ -23,7 +23,10 @@ Cross browser testing for JSONEditor is generously provided by <a href="https://
 
 ## Features
 
-### Tree editor
+JSONEditor has various modes, with the following features.
+
+### Tree mode
+
 - Change, add, move, remove, and duplicate fields and values.
 - Sort arrays and objects.
 - Transform JSON using [JMESPath](http://jmespath.org/) queries.
@@ -33,18 +36,27 @@ Cross browser testing for JSONEditor is generously provided by <a href="https://
 - Undo and redo all actions.
 - JSON schema validation (powered by [ajv](https://github.com/epoberezkin/ajv)).
 
-### Code editor
+### Code mode
+
 - Colorized code (powered by [Ace](https://ace.c9.io)).
 - Inspect JSON (powered by [Ace](https://ace.c9.io)).
 - Format and compact JSON.
 - Repair JSON.
 - JSON schema validation (powered by [ajv](https://github.com/epoberezkin/ajv)).
 
-### Text editor
+### Text mode
+
 - Format and compact JSON.
 - Repair JSON.
 - JSON schema validation (powered by [ajv](https://github.com/epoberezkin/ajv)).
 
+### Preview mode
+
+- Handle large JSON documents up to 500 MiB.
+- Transform JSON using [JMESPath](http://jmespath.org/) queries.
+- Format and compact JSON.
+- Repair JSON.
+- JSON schema validation (powered by [ajv](https://github.com/epoberezkin/ajv)).
 
 ## Documentation
 
@@ -63,10 +75,6 @@ with npm (recommended):
 
     npm install jsoneditor
 
-with bower:
-
-    bower install jsoneditor
-
 > Note that to use JSONEditor in Internet Explorer 11, it is necessary
 > to load a polyfill for `Promise` in your application.
 
@@ -75,10 +83,10 @@ with bower:
 
 ```html
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head>
     <!-- when using the mode "code", it's important to specify charset utf-8 -->
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <meta charset="utf-8">
 
     <link href="jsoneditor/dist/jsoneditor.min.css" rel="stylesheet" type="text/css">
     <script src="jsoneditor/dist/jsoneditor.min.js"></script>
@@ -88,23 +96,23 @@ with bower:
 
     <script>
         // create the editor
-        var container = document.getElementById("jsoneditor");
-        var options = {};
-        var editor = new JSONEditor(container, options);
+        const container = document.getElementById("jsoneditor")
+        const options = {}
+        const editor = new JSONEditor(container, options)
 
         // set json
-        var json = {
+        const initialJson = {
             "Array": [1, 2, 3],
             "Boolean": true,
             "Null": null,
             "Number": 123,
             "Object": {"a": "b", "c": "d"},
             "String": "Hello World"
-        };
-        editor.set(json);
+        }
+        editor.set(initialJson)
 
         // get json
-        var json = editor.get();
+        const updatedJson = editor.get()
     </script>
 </body>
 </html>
@@ -134,12 +142,27 @@ jsoneditor:
 - To automatically build when a source file has changed:
 
   ```
-  npm run watch
+  npm start
   ```
 
   This will update `./jsoneditor.js` and `./jsoneditor.css` in the dist folder
   on every change, but it will **NOT** update the minified versions as that's
   an expensive operation.
+
+
+## Test
+
+Run unit tests:
+
+```
+npm test
+```
+
+Run code linting ([JavaScript Standard Style](https://standardjs.com/)):
+
+```
+npm run lint
+```
 
 
 ## Custom builds
